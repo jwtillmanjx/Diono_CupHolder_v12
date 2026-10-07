@@ -1,6 +1,6 @@
 # Diono Car-Seat Cup Holder (current version: v13)
 
-A 3D-printed replacement cup holder for a Diono child car seat. It clips onto the seat with the original v6 snap rod. v13 adds a **brace** near the bottom of the cup on the arm side. When the cup is pushed toward the seat, the brace's flat pad presses on the seat, so the load no longer bends the **Arm Elbow**, the joint between the snap rod and the sloped support wedge, which kept breaking. v13 also replaces the arm's thin gusset post with a smooth arch, and joins the whole arm to the cup with smooth 8 mm arches. The inside of the cup, the 0.75 mm snap bumps and the snap disc are unchanged from v12.
+A 3D-printed replacement cup holder for a Diono child car seat. It clips onto the seat with the original v6 snap rod. v13 adds a **brace** near the bottom of the cup on the arm side. When the cup is pushed toward the seat, the brace's flat pad presses on the seat, so the load no longer bends the **Arm Elbow**, the joint between the snap rod and the sloped support wedge, which kept breaking. v13 also replaces the arm's thin gusset post with a smooth arch, and joins the whole arm to the cup with smooth 8 mm arches. **Since 2026-10-07 the snap rod also has a 4.5 mm × 62 mm hole down its centre line** (it enters at the rod tip and runs through the Arm Elbow into the sloped support wedge). It takes a stainless **M5 × 60 set screw** (recommended) or an M5 × 50 button-head screw. The steel bridges the elbow so the arm can't snap off. The rod's outside is unchanged. The inside of the cup, the 0.75 mm snap bumps and the snap disc are unchanged from v12.
 
 Full design history and decisions: `../Diono_CupHolder_Session_Context.md`. Simple printing steps: `../PRINT_INSTRUCTIONS.md`.
 
@@ -18,9 +18,10 @@ The main folder holds only what is needed to print: `Diono_CupHolder_v13_Cup_and
 | `Diono_CupHolder_v13_views.png` | Six views of the finished part |
 
 | `Diono_CupHolder_v13.py` | Parametric generator: builds v13 from the v12 3MF; edit the constants at the top and rerun |
-| `Diono_CupHolder_v13_verify.py` → `Diono_CupHolder_v13_verification.png` | 15 automatic checks + v12-vs-v13 cross-sections |
+| `Diono_CupHolder_v13_verify.py` → `Diono_CupHolder_v13_verification.png` | 23 automatic checks (including the screw bore) + v12-vs-v13 cross-sections |
 | `Diono_CupHolder_v13_bambu_project.py` → `Diono_CupHolder_v13_slice_check.png` | Builds the Bambu project with Bambu Studio's command-line slicer, adds the support blocker, slices it, and checks the G-code |
-| `Diono_CupHolder_v13_images.py` | Makes the views and print-orientation images |
+| `Diono_CupHolder_v13_images.py` | Makes the views, print-orientation and screw-bore images |
+| `Diono_CupHolder_v13_screw_bore.png` | Section through the arm: the screw bore, the Arm Elbow, and where 50 mm and 60 mm screws end |
 | `Diono_CupHolder_v13_geometry.3mf` | Plain geometry (no settings), used by the verify script |
 
 Rebuild everything: `python Diono_CupHolder_v13.py`, then `python Diono_CupHolder_v13_verify.py`, `python Diono_CupHolder_v13_bambu_project.py` and `python Diono_CupHolder_v13_images.py`. They need `trimesh manifold3d shapely scipy scikit-image numpy matplotlib`, plus Bambu Studio for the project step.
@@ -43,6 +44,9 @@ James gave the brace's position and size; Claude chose these blending sizes. All
 | Arch replacing the gusset post (#10) | 10 mm radius, 8.8 mm wide | Chosen: tangent to the wall and to the arm-block underside; keeps the post's width |
 | Arm-to-cup arches (#11) | 8 mm radius | Chosen: larger than the old 3 mm fillets, while still fitting the thin wedge near the rim |
 | Pad-face corner rounding | 1.5 mm | Chosen: removes sharp corners |
+| Screw bore diameter (`BORE_D`) | 4.5 mm | Chosen: M5×0.8 thread-forming hole in PETG (thread 4.83–4.98 mm OD, ~4.0 mm core; printed holes come out ~0.1–0.2 mm small). 4.4 = tighter, 4.6 = easier to turn |
+| Screw bore depth (`BORE_DEPTH`) | 62 mm from the rod tip | Chosen: fits a 60 mm screw with 2 mm spare. A 60 mm screw ends 10 mm past the top of the Arm Elbow; a 50 mm one only 2 mm past |
+| Bore axis (`ROD_TIP`, `ROD_ANGLE`) | Tip face centre (82.874, 0, 11.647), 57.40° | Measured: the v6 rod is a straight 10.3 mm round bar; the hole has a ≥ 2.75 mm wall |
 | Snap-rod support blocker | Box from 2 mm past the pad face outward, 28 mm wide, full height | Chosen: covers the rod and its ridge, but not the brace |
 | Process preset | 0.16mm Standard @BBL P2S | The P2S has no "0.16mm Optimal" preset; Standard is the 0.16 mm equivalent |
 

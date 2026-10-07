@@ -39,8 +39,17 @@ bump_zone = mf.Manifold.cylinder(3.0, 36.59, 36.59, 256).translate([0, 0, 4.0])
 refM = (oldM - bump_zone) + (oldM ^ bump_zone).translate([0, 0, -BUMP_DROP])          # v12 with the snap bumps lowered
 added, removed = newM - oldM, refM - newM          # removal judged against v12-with-lowered-bumps
 post_zone = mf.Manifold.cube([10.0, 15.0, 19.0]).translate([39.0, -7.5, 27.0])
-check('material removed only from the old gusset-post zone', (removed - post_zone).volume() < 0.5,
-      'removed %.1f mm3, outside zone %.2f mm3' % (removed.volume(), (removed - post_zone).volume()))
+# steel-screw bore through the snap rod into the Arm Elbow (James 2026-10-07): constants read from the generator
+_gen = open(os.path.join(HERE, 'Diono_CupHolder_v13.py'), encoding='utf-8').read()
+def _const(name): return re.search(r'^%s = (.+?)\s*(#|$)' % name, _gen, re.M).group(1)
+ROD_TIP = np.array(eval(_const('ROD_TIP').replace('np.array', '')), float)
+ROD_ANGLE, BORE_D, BORE_DEPTH = float(_const('ROD_ANGLE')), float(_const('BORE_D')), float(_const('BORE_DEPTH'))
+ROD_DIR = np.array([-np.cos(np.radians(ROD_ANGLE)), 0.0, np.sin(np.radians(ROD_ANGLE))])
+def rod_cyl(r, s0, s1):
+    return mf.Manifold.cylinder(s1 - s0, r, r, 96).translate([0, 0, s0]).rotate([0, -(90 - ROD_ANGLE), 0]).translate(list(ROD_TIP))
+bore_zone = rod_cyl(BORE_D / 2 + 0.05, -1.0, BORE_DEPTH + 0.05)
+check('material removed only from the old gusset-post zone + the screw bore', (removed - post_zone - bore_zone).volume() < 0.5,
+      'removed %.1f mm3, outside zones %.2f mm3' % (removed.volume(), (removed - post_zone - bore_zone).volume()))
 hollow = mf.Manifold.cylinder(H - 1, 36.6, 36.6, 256).translate([0, 0, 0.5]) - refM
 check('nothing added inside the bottle space (besides the lowered bumps)', ((newM - refM) ^ hollow).volume() < 0.5, '%.3f mm3' % ((newM - refM) ^ hollow).volume())
 ring = mf.Manifold.cylinder(40, 40.6, 40.6, 256).translate([0, 0, 48]) - mf.Manifold.cylinder(42, 35.0, 35.0, 256).translate([0, 0, 47])
@@ -69,7 +78,21 @@ above = mf.Manifold.cube([300, 300, 10]).translate([-150, -150, H])
 check('nothing above the rim', (added ^ above).volume() < 0.01)
 # snap rod + Arm Elbow: beyond the pad face (x >= 66) at any height, plus x >= 55 above the brace arch (h >= 26), |y| < 12
 rod = mf.Manifold.cube([40, 24, H + 2]).translate([66, -12, -1]) + mf.Manifold.cube([51, 24, H - 26 + 1]).translate([55, -12, 26])
-check('snap rod / Arm Elbow unchanged', ((newM ^ rod) - (oldM ^ rod)).volume() + ((oldM ^ rod) - (newM ^ rod)).volume() < 0.5)
+filled = newM + (rod_cyl(BORE_D / 2, -1.0, BORE_DEPTH) ^ oldM)                  # v13 with the screw bore filled back in
+check('snap rod / Arm Elbow outside unchanged (only the screw bore inside it)', ((filled ^ rod) - (oldM ^ rod)).volume() + ((oldM ^ rod) - (filled ^ rod)).volume() < 0.5)
+# screw bore: M5 hole on the rod centre line, open only at the nose face
+_inside = rod_cyl(BORE_D / 2, 0.3, BORE_DEPTH)
+check('screw bore %.1f mm x %.0f mm deep, clear, opens only at the rod nose' % (BORE_D, BORE_DEPTH),
+      (newM ^ rod_cyl(BORE_D / 2 - 0.01, 0, BORE_DEPTH - 0.01)).volume() < 0.01 and (_inside - filled).volume() < 0.05,
+      'bore %.0f mm3, bottom at h %.1f' % ((filled - newM).volume(), (ROD_TIP + BORE_DEPTH * ROD_DIR)[2]))
+_wall = 99.0
+for _w in np.arange(2.0, 3.2, 0.05):
+    if (rod_cyl(BORE_D / 2 + _w, 9.0, BORE_DEPTH) - filled).volume() > 0.05: _wall = _w - 0.05; break
+check('screw bore wall >= 2.7 mm from 9 mm behind the nose to the bottom', _wall >= 2.7, 'min wall %.2f mm' % _wall)
+_s = new.section(plane_origin=list(ROD_TIP + 20 * ROD_DIR), plane_normal=list(ROD_DIR))
+_v = _s.vertices - (ROD_TIP + 20 * ROD_DIR); _r = np.linalg.norm(_v, axis=1)
+check('bore centred in the rod (section 20 mm in)', abs(_r[_r < 3].mean() - BORE_D / 2) < 0.05 and abs(_r[_r > 3].min() - 5.15) < 0.1,
+      'hole r %.2f, outside nearest %.2f mm' % (_r[_r < 3].mean(), _r[_r > 3].min()))
 
 # floating-island scan (print orientation, 0.16 mm layers): the only island allowed is the v6 snap-rod ridge,
 # which v12 also has and which printed fine unsupported (Bambu reports it as "floating regions")

@@ -8,6 +8,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 import re
 BUMP_DROP = float(re.search(r'^BUMP_DROP = ([\d.]+)', open(os.path.join(HERE, 'Diono_CupHolder_v13.py'), encoding='utf-8').read(), re.M).group(1))
 H, AX = 88.9, np.array([50.42, 128.0])
+_gen = open(os.path.join(HERE, 'Diono_CupHolder_v13.py'), encoding='utf-8').read()
+def _const(name): return re.search(r'^%s = (.+?)\s*(#|$)' % name, _gen, re.M).group(1)
+ROD_TIP = np.array(eval(_const('ROD_TIP').replace('np.array', '')), float)       # screw bore (James 2026-10-07)
+ROD_ANGLE, BORE_D, BORE_DEPTH = float(_const('ROD_ANGLE')), float(_const('BORE_D')), float(_const('BORE_DEPTH'))
+ROD_DIR = np.array([-np.cos(np.radians(ROD_ANGLE)), 0.0, np.sin(np.radians(ROD_ANGLE))])
+ROD_V = np.array([np.sin(np.radians(ROD_ANGLE)), 0.0, np.cos(np.radians(ROD_ANGLE))])   # across the rod, in the x-h plane
 
 def rot(az, el):
     a, e = np.radians(az), np.radians(el)
@@ -84,16 +90,18 @@ panels = [
     ('Rear 3/4', cup_only, 145, 18, None, [
         ('Smooth exterior (no slots)', pol(170, 39, 25), 560, 760), ('Snap rod tip', (82, 2, 13), 5, 840),
         ('Brace arch (far side)', (50, 16, 25), 5, 560), ('Rim', pol(150, 42.3, 88.6), 560, 90)]),
-    ('Side elevation', cup_only, 0, 0, None, [
+    ('Side elevation', cup_only, 0, 0, 'side', [
         ('Arm block', (45, -6.5, 47), 520, 120), ('Arch under arm block\n(replaced gusset post)', (41.5, -4.4, 38), 80, 420),
-        ('Small ridge on rod (v6)', (71.6, -1.5, 42.3), 640, 300), ('Rod tip (chamfered)', (82, -3, 13), 650, 760),
+        ('Small ridge on rod (v6)', (71.6, -1.5, 42.3), 640, 300), ('Rod tip (chamfered)', (82, -3, 13), 650, 700),
+        ('M5 screw bore (hidden, dashed)\n%.1f mm x %.0f mm deep, opens\nat the centre of the rod tip' % (BORE_D, BORE_DEPTH),
+         tuple(ROD_TIP + 1.0 * ROD_DIR + 2.0 * np.array([0, -1, 0])), 560, 830),
         ('Brace arch (true arch, >= 28 deg)', (56, -20, 20), 60, 640), ('Brace 7 mm thick', (60, -27.5, 7.5), 300, 860),
         ('Arm-to-cup arch', (41.6, -13.4, 80), 80, 160)]),
     ('Top (disc removed)', cup_only, 0, 90, 'bumps', [
         ('Bottle opening (79.9 ID)', pol(120, 41.2, 88.9), 120, 120), ('Brace (55 mm wide)', (55, -20, 12), 560, 800),
         ('Mounting arm', (52, 0, 75), 600, 160)]),
     ('From below (disc seated)', [(use, CUP_LB), (seated, DISC)], -50, -25, None, [
-        ('Snap disc (seated)', (0, 0, 2), 330, 800), ('Brace underside', (55, -10, 4), 600, 820),
+        ('Snap disc (seated)', (0, 0, 2), 330, 800), ('Screw hole in rod tip', tuple(ROD_TIP - 0.3 * ROD_DIR + np.array([0, 2.4, 0])), 600, 380), ('Brace underside', (55, -10, 4), 600, 820),
         ('Fillet under brace (3 mm)', pol(-25, 39.7, 2.4), 5, 600), ('Bottom edge', pol(160, 38.9, 0.5), 5, 870)]),
     ('Brace close-up', cup_only, -20, 12, 'close', [
         ('Brace arch (curves from 28 deg to vertical)', (50, -14, 26), 5, 520), ('Flat pad face 55 x 7 mm', (63.9, -8, 7.5), 520, 860),
@@ -113,13 +121,59 @@ for ax, (title, ms, az, el, mode, items) in zip(axs.ravel(), panels):
             ax.add_patch(plt.Circle((q[0], q[1]), 16, fill=False, ec='#c2410c', lw=2.5))
             t = p(np.array(pol(ang, 21, 6)))[0]
             ax.text(t[0], t[1], 'Snap bump\n%d deg' % ang, ha='center', va='center', fontsize=12, color='#c2410c', weight='bold')
+    if mode == 'side':                                                   # hidden screw bore, dashed
+        for off in (-BORE_D / 2, BORE_D / 2):
+            a_, b_ = p(np.array([ROD_TIP + off * ROD_V, ROD_TIP + off * ROD_V + BORE_DEPTH * ROD_DIR]))[:, :2]
+            ax.plot([a_[0], b_[0]], [a_[1], b_[1]], '--', c='#c2410c', lw=1.6, zorder=5)
+        e1, e2 = p(np.array([ROD_TIP + BORE_DEPTH * ROD_DIR + o * ROD_V for o in (-BORE_D / 2, BORE_D / 2)]))[:, :2]
+        ax.plot([e1[0], e2[0]], [e1[1], e2[1]], '--', c='#c2410c', lw=1.6, zorder=5)
     labels(ax, p, items)
     ax.set_xlim(0, 900); ax.set_ylim(900, 0)
-fig.suptitle('Diono Cup Holder v13 (light blue PETG Matte): brace protects the Arm Elbow; arm joins the cup with smooth arches',
+fig.suptitle('Diono Cup Holder v13 (light blue PETG Matte): brace protects the Arm Elbow; steel M5 screw bore through the snap rod',
              fontsize=22, weight='bold')
 fig.text(0.5, 0.015, '88.9 mm tall  |  brace 55 mm wide x 7 mm thick, 4-11 mm above the bottom, pad face 25 mm from the wall  |  '
-         'snap bumps lowered %.2f mm (no rattle)  |  snap rod unchanged from v6/v12  |  disc (yellow) unchanged' % BUMP_DROP, ha='center', fontsize=14)
+         'snap bumps lowered %.2f mm (no rattle)  |  snap rod outside unchanged; M5 screw bore %.1f x %.0f mm in its centre  |  disc (yellow) unchanged' % (BUMP_DROP, BORE_D, BORE_DEPTH), ha='center', fontsize=14)
 plt.tight_layout(rect=(0, 0.03, 1, 0.95)); fig.savefig(os.path.join(HERE, 'Diono_CupHolder_v13_views.png'), dpi=72)
+
+# ---------- Diono_CupHolder_v13_screw_bore.png: where the screw sits (James 2026-10-07: 50 mm or 60 mm?) ----------
+from matplotlib.patches import Polygon as MPoly
+LB2 = {k: v for k, v in LB.items() if k != 'fontsize'}
+fig, (ax, ax2) = plt.subplots(1, 2, figsize=(24, 12), gridspec_kw=dict(width_ratios=[1.6, 1]), facecolor='white')
+sec = use.section(plane_origin=[0, 0, 0], plane_normal=[0, 1, 0])
+for e in sec.discrete: ax.fill(e[:, 0], e[:, 2], fc=CUP_LB, ec='#333', lw=1.2, alpha=0.55)
+ax.axhspan(40, 52, color='#f59f00', alpha=0.18, lw=0); ax.text(31, 46, 'Arm Elbow\n(h 40-52)', fontsize=14, va='center', color='#9a5b00', weight='bold')
+def screw(L, col, txy, lab):
+    a0 = ROD_TIP; a1 = ROD_TIP + L * ROD_DIR; r = 2.45
+    ax.add_patch(MPoly(np.array([a0 + r * ROD_V, a1 + r * ROD_V, a1 - r * ROD_V, a0 - r * ROD_V])[:, [0, 2]], fc=col, ec='k', lw=1, alpha=0.75, zorder=4))
+    ax.plot(*a1[[0, 2]], 'o', c=col, mec='k', ms=9, zorder=5)
+    ax.annotate(lab, xy=a1[[0, 2]], xytext=txy, fontsize=14, arrowprops=AR, zorder=7, **LB2)
+screw(60, '#9aa5b1', (66, 70), '60 mm screw ends here (h %.0f):\n%.0f mm past the top of the elbow' % ((ROD_TIP + 60 * ROD_DIR)[2], (ROD_TIP + 60 * ROD_DIR)[2] - 52))
+screw(50, '#5c6773', (72, 56), '50 mm screw ends here (h %.0f):\nonly %.0f mm past the elbow' % ((ROD_TIP + 50 * ROD_DIR)[2], (ROD_TIP + 50 * ROD_DIR)[2] - 52))
+b0 = ROD_TIP + BORE_DEPTH * ROD_DIR
+for off in (-BORE_D / 2, BORE_D / 2):
+    q0, q1 = ROD_TIP - 1 * ROD_DIR + off * ROD_V, b0 + off * ROD_V; ax.plot([q0[0], q1[0]], [q0[2], q1[2]], '--', c='#c2410c', lw=1.4, zorder=6)
+ax.annotate('Bore %.1f mm, %.0f mm deep\n(opens at the centre of the rod tip)' % (BORE_D, BORE_DEPTH), xy=ROD_TIP[[0, 2]], xytext=(60, 3),
+            fontsize=14, arrowprops=AR, **LB2)
+ax.annotate('Sloped support wedge', xy=(48, 76), xytext=(56, 86), fontsize=14, arrowprops=AR, **LB2)
+ax.annotate('Snap rod (10.3 mm round)', xy=(74, 26), xytext=(86, 30), fontsize=14, arrowprops=AR, **LB2)
+ax.set_xlim(28, 112); ax.set_ylim(-2, 92); ax.set_aspect('equal'); ax.grid(alpha=0.3)
+ax.set_xlabel('mm out from the cup axis (seat side)', fontsize=13); ax.set_ylabel('h = height above cup bottom (mm)', fontsize=13)
+ax.set_title('Section through the centre of the arm (gray bars = steel screw, no head drawn)', fontsize=16, weight='bold')
+# rod cross-section 20 mm behind the tip, with the hole
+c0 = ROD_TIP + 20 * ROD_DIR; cs = use.section(plane_origin=list(c0), plane_normal=list(ROD_DIR))
+for e in cs.discrete:
+    q = e - c0; uu, vv = q[:, 1], q @ ROD_V
+    if np.hypot(uu, vv).max() < 12: ax2.fill(uu, vv, fc=CUP_LB if np.hypot(uu, vv).min() > 3 else 'white', ec='#333', lw=1.5, zorder=2 if np.hypot(uu, vv).min() > 3 else 3)
+th = np.linspace(0, 2 * np.pi, 100)
+ax2.plot(2.45 * np.cos(th), 2.45 * np.sin(th), ':', c='#5c6773', lw=1.5, zorder=4); ax2.plot(2.01 * np.cos(th), 2.01 * np.sin(th), ':', c='#5c6773', lw=1.0, zorder=4)
+ax2.annotate('', xy=(5.15, -6.2), xytext=(2.25, -6.2), arrowprops=dict(arrowstyle='<->', lw=1.2)); ax2.text(3.7, -6.9, '2.9 mm wall', ha='center', fontsize=13, va='top')
+ax2.annotate('', xy=(-5.15, 6.4), xytext=(5.15, 6.4), arrowprops=dict(arrowstyle='<->', lw=1.2)); ax2.text(0, 6.9, '10.3 mm diameter', ha='center', fontsize=13)
+ax2.text(0, -9.6, 'Hole %.1f mm (prints ~4.3-4.4). M5 thread: 4.83-4.98 mm outside, ~4.0 mm core (dotted),\nso the screw cuts its own thread in the PETG.' % BORE_D,
+         ha='center', fontsize=12)
+ax2.set_xlim(-9, 9); ax2.set_ylim(-11.5, 9); ax2.set_aspect('equal'); ax2.set_axis_off()
+ax2.set_title('Snap rod cross-section, 20 mm behind the tip', fontsize=16, weight='bold')
+fig.suptitle('Steel M5 screw through the snap rod and the Arm Elbow (v13, 2026-10-07)', fontsize=20, weight='bold')
+plt.tight_layout(rect=(0, 0, 1, 0.95)); fig.savefig(os.path.join(HERE, 'Diono_CupHolder_v13_screw_bore.png'), dpi=72)
 
 # ---------- print_orientation.png ----------
 m = cup_p.copy(); m.apply_translation([-AX[0], -AX[1], 0])         # print pose: rim on the bed (z = 0)

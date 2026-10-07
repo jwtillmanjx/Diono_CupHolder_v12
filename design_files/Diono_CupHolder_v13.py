@@ -65,6 +65,16 @@ PITCH = 0.25                  # voxel size for the arm arches
 # still rattles -> larger; too hard to press in -> smaller (0.35 = zero play).
 BUMP_DROP = 0.50          # 2026-10-06: 0.45 still rattled a little on the real print -> +0.05 (preload ~0.15 mm)
 
+# ---------------- steel screw bore (James 2026-10-07: "bore a hole within the centre of the snap rod and into the Arm Elbow") ----------------
+# A straight M5 hole on the rod's own centre line, entering at the centre of the rod's nose end face and running up through
+# the rod and the Arm Elbow into the sloped support wedge. A stainless M5 screw in it bridges the elbow so the arm can't snap.
+# The rod centre line was measured from v12 (perpendicular sections; it is straight to 1e-7 mm): rod section 10.3 x 10.3 mm,
+# >= 5.0 mm from the line to the outside all the way from s = 9 to s = 72 mm. The nose end face is only ~6 x 6 mm.
+ROD_TIP = np.array([82.874, 0.0, 11.647])   # measured: centre of the rod's nose end face (use coords)
+ROD_ANGLE = 57.40                            # measured: rod centre line, degrees up from horizontal, pointing in toward the cup
+BORE_D = 4.5          # M5 x 0.8 thread-forming hole in PETG (thread 4.83-4.98 OD, ~4.02 core; prints ~0.1-0.2 mm under)
+BORE_DEPTH = 62.0     # from the nose face: a 60 mm screw ends at h 62, 10 mm past the elbow; 2 mm spare; 50 mm screws fit too
+
 # ---------------- helpers ----------------
 def ccw(P):
     P = np.asarray(P, float); sa = 0.5*np.sum(P[:, 0]*np.roll(P[:, 1], -1)-np.roll(P[:, 0], -1)*P[:, 1])
@@ -252,6 +262,18 @@ print('brace-arch wall blend built in %.0fs (%.0f mm3)' % (time.time() - t0, arc
 # ---------------- 4. assemble ----------------
 v13 = cupM + brace + low_fillet + arch9 + arch9_blend + arch10 + crevice + arch11
 v13 = sorted(v13.decompose(), key=lambda q: -q.volume())[0]      # no simplify(): even 0.01 mm drift nudges the bore
+v13_solid = v13                                                  # before the screw bore (for the checks below)
+
+# screw bore: cylinder on the rod centre line, from 1 mm outside the nose face to BORE_DEPTH inside
+ROD_DIR = np.array([-np.cos(np.radians(ROD_ANGLE)), 0.0, np.sin(np.radians(ROD_ANGLE))])
+def rod_cyl(r, s0, s1, seg=96):
+    """Cylinder of radius r on the rod centre line from s0 to s1 mm (s = 0 at the nose face, + toward the cup)."""
+    c = mf.Manifold.cylinder(s1 - s0, r, r, seg).translate([0, 0, s0])             # along +z
+    c = c.rotate([0, -(90 - ROD_ANGLE), 0])                                          # +z -> ROD_DIR
+    return c.translate(list(ROD_TIP))
+assert np.allclose(np.array(rod_cyl(1, 0, 10).bounding_box()).reshape(2, 3).mean(0), ROD_TIP + 5 * ROD_DIR, atol=0.05), 'bore direction'
+screw_bore = rod_cyl(BORE_D / 2, -1.0, BORE_DEPTH)
+v13 = v13 - screw_bore
 v13_use = T(v13)
 
 # ---------------- 5. assertions ----------------
@@ -271,7 +293,16 @@ bumps13 = v13 ^ above_lip
 assert abs(bumps13.volume() - (cup12M ^ above_lip).volume()) < 0.5, 'bump volume must be unchanged'
 assert abs(bumps13.bounding_box()[2] - (4.35 - BUMP_DROP)) < 0.06, 'bumps start at h %.2f' % bumps13.bounding_box()[2]
 far = mf.Manifold.cube([40, 24, H + 2]).translate([66, -12, -1]) + mf.Manifold.cube([51, 24, H - 26 + 1]).translate([55, -12, 26])   # snap rod + elbow
-assert ((v13 ^ far) - (cup12M ^ far)).volume() < 0.5 and ((cup12M ^ far) - (v13 ^ far)).volume() < 0.5, 'snap rod changed'
+assert ((v13_solid ^ far) - (cup12M ^ far)).volume() < 0.5 and ((cup12M ^ far) - (v13_solid ^ far)).volume() < 0.5, 'snap rod changed'
+# screw bore: removes exactly the bore cylinder, all of it inside the arm (opens only at the nose face), >= 2.7 mm wall
+bore_cut = v13_solid - v13
+bore_in = rod_cyl(BORE_D / 2, 0.3, BORE_DEPTH)
+assert (bore_in - v13_solid).volume() < 0.05, 'bore breaks out of the arm'
+assert abs(bore_cut.volume() - (screw_bore ^ v13_solid).volume()) < 0.01 and (bore_cut - screw_bore).volume() < 0.01
+assert (rod_cyl(BORE_D / 2 + 2.7, 9.0, BORE_DEPTH) - v13_solid).volume() < 0.05, 'bore wall thinner than 2.7 mm'
+assert (v13 ^ rod_cyl(BORE_D / 2 - 0.01, 0.0, BORE_DEPTH - 0.01)).volume() < 0.01, 'bore not clear'
+print('screw bore: %.1f mm dia x %.1f mm deep along the rod (%.1f deg), %.0f mm3 removed; nose face at h %.1f, bottom at h %.1f'
+      % (BORE_D, BORE_DEPTH, ROD_ANGLE, bore_cut.volume(), ROD_TIP[2], (ROD_TIP + BORE_DEPTH * ROD_DIR)[2]))
 pad_sec = v13_use.section(plane_origin=[X_PAD - 2.0, 0, 0], plane_normal=[1, 0, 0])   # 2 mm in: past the 1.5 mm corner rounds
 pv = pad_sec.vertices; pv = pv[np.abs(pv[:, 2] - (H0 + H1) / 2) < 6]
 print('pad section: width %.2f mm, h %.2f-%.2f' % (pv[:, 1].max() - pv[:, 1].min(), pv[:, 2].min(), pv[:, 2].max()))
