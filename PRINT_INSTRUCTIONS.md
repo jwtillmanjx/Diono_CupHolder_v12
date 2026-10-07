@@ -2,6 +2,8 @@
 
 **File to open:** `Diono_CupHolder_v13_Cup_and_SnapDisc.3mf`. All settings are already inside it.
 
+**New (2026-10-07): the snap rod now has a hole down its centre for a steel screw.** If you haven't rebuilt the project since then, do this first on your PC: `git pull`, then `cd design_files`, then `python Diono_CupHolder_v13_bambu_project.py`.
+
 ## Steps
 
 1. Put the **Textured PEI plate** on the printer. **Wash it with dish soap and warm water**, rinse, and dry it. Don't touch the surface afterward. (Finger oils make PETG come loose.)
@@ -23,6 +25,9 @@
 
 - **Disc:** tilt it into the cup, hook one edge under a bump, press down until it clicks. It should sit snug with no rattle.
   To take it out, push up from underneath.
+- **Steel screw (makes the arm much harder to break):** use an **M5 × 60 mm stainless set screw** (no head). Screw it into the hole in the **tip of the snap rod** with a 2.5 mm hex key until it's flush with the tip.
+  It cuts its own thread, so go slowly: a drop of dish soap helps, and back it out half a turn every few turns. If it gets too hard to turn, run a 4.5 mm drill bit through the hole by hand, then try again.
+  (An M5 × 50 button-head screw also fits, but its head sticks out of the rod tip. Test that it still clips into the seat.)
 - **In the car:** clip it onto the seat like before. The flat face of the shelf faces the seat.
 
 ## Good to know
