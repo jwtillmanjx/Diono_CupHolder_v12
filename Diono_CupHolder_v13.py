@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Diono car-seat cup holder v13 = v12 + brace that protects the Arm Elbow.
 
-Builds from the delivered v12 3MF (cup + snap disc), kept here as v12_base_for_generator.3mf:
+Builds from the delivered v12 3MF (cup + snap disc), kept as generator_input/v12_base_for_generator.3mf:
     python Diono_CupHolder_v13.py
 Needs: pip install --user trimesh manifold3d shapely scipy scikit-image numpy matplotlib
 
@@ -26,7 +26,7 @@ from skimage.measure import marching_cubes
 from scipy.ndimage import distance_transform_edt as edt, label, gaussian_filter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, "v12_base_for_generator.3mf")      # the delivered v12 cup + disc
+SRC = os.path.join(HERE, "generator_input", "v12_base_for_generator.3mf")      # the delivered v12 cup + disc
 
 # ---------------- v12 reference geometry (measured from the v12 file) ----------------
 H = 88.9                      # cup height

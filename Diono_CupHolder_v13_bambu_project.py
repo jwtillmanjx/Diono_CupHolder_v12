@@ -81,7 +81,7 @@ def add_obj_settings(ms, name, kv):
 ms = add_obj_settings(ms, 'Cup.stl', {**OBJ, **SUP})
 ms = add_obj_settings(ms, 'SnapDisc.stl', OBJ)
 files['3D/3dmodel.model'] = model.encode(); files['Metadata/model_settings.config'] = ms.encode()
-OUT = os.path.join(os.path.dirname(HERE), 'Diono_CupHolder_v13_Cup_and_SnapDisc.3mf')   # main folder: the file James opens
+OUT = os.path.join(HERE, 'Diono_CupHolder_v13_Cup_and_SnapDisc.3mf')   # project root: the file James opens
 with zipfile.ZipFile(OUT, 'w', zipfile.ZIP_DEFLATED) as z:
     for n, b in files.items(): z.writestr(n, b)
 

@@ -2,7 +2,14 @@
 
 **File to open:** `Diono_CupHolder_v13_Cup_and_SnapDisc.3mf`. All settings are already inside it.
 
-**New (2026-10-07): the snap rod now has a hole down its centre for a steel screw.** If you haven't rebuilt the project since then, do this first on your PC: `git pull`, then `cd design_files`, then `python Diono_CupHolder_v13_bambu_project.py`.
+**Make that file first (once, on your PC).** It isn't in the folder until you build it. The old one was deleted because it had no screw hole. Open a terminal in this folder and run:
+
+```
+git pull
+python Diono_CupHolder_v13_bambu_project.py
+```
+
+It must end with **slice OK**. The file then appears in this folder. This design has a hole down the centre of the snap rod for a steel screw.
 
 ## Steps
 
@@ -33,4 +40,4 @@
 ## Good to know
 
 - Don't leave a full, heavy bottle in it while the car is parked in hot sun.
-- Design files and details are in the `design_files` folder. You don't need them to print.
+- The other files in this folder are the design scripts and check images. You don't need them to print. `README.md` explains them.

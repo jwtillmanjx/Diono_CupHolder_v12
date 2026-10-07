@@ -2,16 +2,16 @@
 
 A 3D-printed replacement cup holder for a Diono child car seat. It clips onto the seat with the original v6 snap rod. v13 adds a **brace** near the bottom of the cup on the arm side. When the cup is pushed toward the seat, the brace's flat pad presses on the seat, so the load no longer bends the **Arm Elbow**, the joint between the snap rod and the sloped support wedge, which kept breaking. v13 also replaces the arm's thin gusset post with a smooth arch, and joins the whole arm to the cup with smooth 8 mm arches. **Since 2026-10-07 the snap rod also has a 4.5 mm × 62 mm hole down its centre line** (it enters at the rod tip and runs through the Arm Elbow into the sloped support wedge). It takes a stainless **M5 × 60 set screw** (recommended) or an M5 × 50 button-head screw. The steel bridges the elbow so the arm can't snap off. The rod's outside is unchanged. The inside of the cup, the 0.75 mm snap bumps and the snap disc are unchanged from v12.
 
-Full design history and decisions: `../Diono_CupHolder_Session_Context.md`. Simple printing steps: `../PRINT_INSTRUCTIONS.md`.
+Full design history and decisions: `Diono_CupHolder_Session_Context.md`. Simple printing steps: `PRINT_INSTRUCTIONS.md`.
 
 ## Files
 
-The main folder holds only what is needed to print: `Diono_CupHolder_v13_Cup_and_SnapDisc.3mf` and `PRINT_INSTRUCTIONS.md`. Everything below lives in `design_files/`. Older v12 deliverables were deleted on 2026-10-05 at James's request so there's only one file to pick. The v12 cup is kept here as `v12_base_for_generator.3mf` because the generator builds v13 from it.
+Since 2026-10-07 the repo holds **one design only, in the project root** (James's rule; there is no `design_files/` folder any more). The old print project without the screw bore was deleted. The print project `Diono_CupHolder_v13_Cup_and_SnapDisc.3mf` is not in the repo until it is rebuilt on James's PC with `python Diono_CupHolder_v13_bambu_project.py` (it needs Bambu Studio). The only other cup file is `generator_input/v12_base_for_generator.3mf`: it is not for printing; the generator builds v13 from it and the verify script compares against it.
 
 | File | Purpose |
 |---|---|
-| `../Diono_CupHolder_v13_Cup_and_SnapDisc.3mf` | **Open this in Bambu Studio.** A ready-to-print project with the cup + disc, all print settings and the snap-rod support blocker (written to the main folder by `Diono_CupHolder_v13_bambu_project.py`) |
-| `v12_base_for_generator.3mf` | The delivered v12 cup + disc; the generator's input |
+| `Diono_CupHolder_v13_Cup_and_SnapDisc.3mf` | **Open this in Bambu Studio.** A ready-to-print project with the cup + disc and all print settings. **Not in the repo until rebuilt:** `Diono_CupHolder_v13_bambu_project.py` writes it to the project root |
+| `generator_input/v12_base_for_generator.3mf` | The delivered v12 cup + disc; the generator's input. Not for printing |
 | `Diono_CupHolder_v13_Cup.stl` | Cup only, already in print orientation (rim down), for use without the project |
 | `Diono_CupHolder_v13_SnapDisc.stl` | Snap disc (same as v12) |
 | `print_orientation.png` | How the cup sits on the plate: bed contact and supported areas |
@@ -28,7 +28,7 @@ Rebuild everything: `python Diono_CupHolder_v13.py`, then `python Diono_CupHolde
 
 ## How this model was made
 
-- **Base:** the delivered and printed v12 cup (kept as `v12_base_for_generator.3mf`). Its arm and snap rod are the original v6 geometry, and its 0.75 mm snap bumps were confirmed by James's fit test. Every v13 change is a boolean addition to v12, except the gusset post (removed and replaced by an arch, at James's request).
+- **Base:** the delivered and printed v12 cup (kept as `generator_input/v12_base_for_generator.3mf`). Its arm and snap rod are the original v6 geometry, and its 0.75 mm snap bumps were confirmed by James's fit test. Every v13 change is a boolean addition to v12, except the gusset post (removed and replaced by an arch, at James's request).
 - **James's instructions:** brace 4 mm from the bottom, 10 mm thick, 25 mm out from the cup, 55 mm wide; remove the wrap band; smooth arched supports, full width; replace the gusset post with a smooth arch; join the mounting arm to the cup with smooth curved arches; 100% infill everywhere.
 - **Not changed:** the inside of the cup (lower and upper bore, snap bumps, disc seat), the snap rod, the cup's outside away from the arm, and the disc. The verify script proves each of these with 0.000 mm³ difference from v12.
 
@@ -52,7 +52,7 @@ James gave the brace's position and size; Claude chose these blending sizes. All
 
 ## Printing on the Bambu Lab P2S (Bambu Studio)
 
-**Easiest:** **File → Open Project** → `Diono_CupHolder_v13_Cup_and_SnapDisc.3mf`, and load its settings when asked. Everything below is already set. Pick your PETG in the AMS, slice, check the preview, print. Simple steps: `../PRINT_INSTRUCTIONS.md`. For the manual STL route, the support blocker is a 29 × 28 × 90 mm box covering the snap rod from 2 mm past the brace pad face outward.
+**Easiest:** **File → Open Project** → `Diono_CupHolder_v13_Cup_and_SnapDisc.3mf`, and load its settings when asked. Everything below is already set. Pick your PETG in the AMS, slice, check the preview, print. Simple steps: `PRINT_INSTRUCTIONS.md`. For the manual STL route, the support blocker is a 29 × 28 × 90 mm box covering the snap rod from 2 mm past the brace pad face outward.
 
 First click **Global** (the toggle next to "Process", not "Objects") so the settings apply to the whole plate.
 

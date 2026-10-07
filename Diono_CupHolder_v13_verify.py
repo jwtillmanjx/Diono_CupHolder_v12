@@ -20,7 +20,7 @@ def read3mf(path):
 def to_use(t):
     t = t.copy(); t.vertices[:, 0] -= AXIS[0]; t.vertices[:, 1] -= AXIS[1]; t.vertices[:, 2] = H - t.vertices[:, 2]; t.invert(); return t
 
-v12 = read3mf(os.path.join(HERE, 'v12_base_for_generator.3mf'))
+v12 = read3mf(os.path.join(HERE, 'generator_input', 'v12_base_for_generator.3mf'))
 v13 = read3mf(os.path.join(HERE, 'Diono_CupHolder_v13_geometry.3mf'))
 old, new = to_use(v12[0][1]), to_use(v13[0][1])
 oldM, newM = M(old), M(new)
